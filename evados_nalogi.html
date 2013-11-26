@@ -79,28 +79,66 @@
 				
 			$('form').on('click', '#add-extra', function(){
 				//var i = $('.extra').size() + 1;
-				$('<p><input type="text" id="extraDate" name="extraDate" readonly/>	<input type="text" id="extraPay" name="extraPay" ></p>').appendTo($('.extra'));
+				$('<p class="extraPayment"><input type="text" id="extraDate" name="extraDate" readonly/>	<input type="text" id="extraPay" name="extraPay" ></p>').appendTo($('.extra'));
 				$('[name=extraDate]').datepicker({
-					endDate: end_at.datepicker().val()
+					endDate: new Date(end_at)
 				}).on('changeDate', function(ev){
 					if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf() || ev.date.valueOf()  > end_at.datepicker('getDate').valueOf()){
 						console.log('wrong extra date!');
 					}
 				});
 			});
+
 			$('form').on('click', '#ok', function(){
-				//console.log(end_at.datepicker('getDate'));
+				$('#penalty').text('');
 				debt = $('input').first().val();
+				//if extra present
+				if($("[name=extraDate]").length  > 0 ){
+					//console.log('extraPayment present');
+					/*
+					var extraDateEnd = ($("[name=extraDate]"));
+					var extraDateStart  = start_at.datepicker('getDate').valueOf();
+					var extraPay = ($('[name=extraPay]').val());
+					var new_debt = debt - parseFloat(extraPay);
+
+					getRefRate(debt, extraDateStart, extraDateEnd);
+					
+					//1 day later (+ 86400000)
+					start_day_ms = (extraDateEnd.datepicker('getDate').valueOf() + 86400000 );
+					getRefRate(new_debt, start_day_ms, end_at);
+
+					*/
+					var start_in_ms  = start_at.datepicker('getDate').valueOf();
+					var end_in_ms = end_at.datepicker('getDate').valueOf();
+					$("[name=extraDate]").each(function(index){
+						end_at = $(this).datepicker('getDate').valueOf();
+						//getRefRate(debt, start_in_ms, end);
+						console.log("Debt: " + debt + " start: " + new Date(start_in_ms) + " end_at: " + new Date(end_at) );
+						//debt -= parseFloat(extraPay);
+
+						start_in_ms = end_at; //new start date
+					});
+						end_in_ms = 
+						console.log("Debt: " + debt + " start: " + new Date(start_in_ms) + " end_at: " + new Date(end_in_ms) );
+						//getRefRate(debt, start_in_ms, end);
+					return;
+				}
+				
 				$error.text('');
-				if(!start_at.val() || !end_at.val() || !debt){
+				if(!start_at.val() && !end_at.val() && !debt){
 					$error.text("Указаны не все данные!");
 					return;
 				}
-				getRefRate(debt, end_at.datepicker().val()); // load ajax		
+				//getRefRate(debt, start_at.end,end_at.datepicker().val()); // load ajax	
+				start_at.datepicker('getDate').valueOf();
+				getRefRate(debt, start_at, end_at);
 			});
 
-			function getRefRate(debt, date) {
+			function getRefRate(debt, start, end) {
 				$("#loading").show();
+				var date = end; //ms
+				//var date =  end.datepicker().val();
+			//	alert(date);
 				var url = "http://www.nbrb.by/Services/XmlRefRate.aspx?onDate="+date,
 					yql = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from xml where url="' + url + '"') + '&format=xml&callback=?',
 					refRate = 0;
@@ -112,27 +150,26 @@
 				    	var xmlDoc = $.parseXML(res.results[0]), // to xml object
 				    	$xml = $(xmlDoc),
 				    	refValue = $xml.find("Value").first().text();
-				    	console.log(res);
 				    	console.log(refValue);
 				    	refRate = parseFloat(refValue);
-
+				    	//console.log(penalty(debt, start, end, refRate)+ "<-------------here");
 						$('#loading').hide();
-						$('#penalty').text(penalty(debt, start_at, end_at, refRate));
+						$('#penalty').prepend("<li>\n" + new Date(start) + "\t" + new Date(end) + "\t" + refRate + "\t" + penalty(debt, start, end, refRate)+"</li>");
 						
 					}
 				});
 			}
-		
-			function daydiff(start_at, end_at) {
-				if (start_at <= end_at){
-				return ((end_at.datepicker('getDate').getTime() -
-				 start_at.datepicker('getDate').getTime())/86400000) + 1; //ms
-				}
-				return;
-			}
 
 			function penalty(debt, start_at, end_at, ref_rate){
+				console.log(daydiff(start_at, end_at) + "- - - day diff");
 				return Math.round(debt * daydiff(start_at, end_at) * ref_rate/36000)
+			}
+
+			function daydiff(start_at, end_at) {
+			//	return ((end_at.datepicker('getDate').getTime() -
+			//	 start_at.datepicker('getDate').getTime())/86400000) + 1; //days
+				console.log(end_at + "end_at time");
+				return ((end_at - start_at)/ 86400000 + 1); // days
 			}
 		});
 	</script>
@@ -161,7 +198,7 @@
 			<input type="button" class="btn btn-success" id="ok" value="Посчитать">
 		</form>
 		<div id="result">
-			Ваша задолженность на дату погашения составляет:
+			Дата ---- Дата Оплаты --- Ставка ------Пеня
 			<span id="penalty"></span>
 		</div> бел. рублей.
 </body>
