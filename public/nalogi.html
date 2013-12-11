@@ -1,0 +1,70 @@
+<!doctype html>
+
+<!--[if lt IE 7]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+
+    <title>Evados nalogi2</title>
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.css" />
+    <link type="text/css" rel="stylesheet" href="css/datepicker.css" />
+    <link type="text/css" rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="js/underscore.js"></script>
+    <!-- <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> -->
+    <script src="js/bootstrap-datepicker.js"></script>
+    <script src="js/backbone.js"></script>
+    <script src="js/nalogi.js"></script>
+
+   <script type="text/template" id="app-template">
+      <div class="input-append date" ><input type="text" id="start_at" class="span2" placeholder="Start date here"/><span class="add-on"><i class="icon-calendar"></i></span></div>
+      <div class="input-append date" ><input class="span2" type="text" id="end_at" placeholder="End date here"/><span class="add-on"><i class="icon-calendar"></i></span></div>
+      <p><input type="text" class="numbersOnly" id="debt" placeholder="Сумма"/><p>
+      <legend>Промежуточные платежи:</legend>
+      <div class="extra"></div>
+
+      <a id="addExtra" class="btn" href="#"><i class="icon-plus"></i>Добавить</a>
+      <a id="rm" class="btn" href="#"><i class="icon-minus"></i>Удалить</a>
+      <p><input type="button" id="ok" class="btn" value="Посчитать" /></p>
+    </script>
+
+    <script type="text/template" id="result-template">
+
+      <table class="table results">
+
+      </table>
+    </script>
+
+
+    <script type="text/template" id="penalty-template">
+        <thead>
+          <tr>
+            <th>Начало периода</th>
+            <th>Окончание периода</th>
+            <th>Ставка</th>
+            <th>Пени</th>
+          </tr>
+        </thead>
+      <tr>
+        <td><%= start_at %></td>
+        <td><%= end_at %></td>
+        <td><%= ref_rate + '%' %></td> 
+        <td><%= penalty %></td>
+      </tr>
+        
+    </script>
+
+  </head>
+  <body class="well"> 
+    <div class="alert alert-danger" id="error"></div>
+    <div id="details">
+      <!-- <input type="text" id="debt" placeholder="Введите задолженность"/>
+      <p><input type="button" id="ok" class="btn" value="Посчитать" /></p> -->
+    </div>
+    <div id="result"></div>
+  </body>
+</html>
