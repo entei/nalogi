@@ -17,15 +17,7 @@ $(function(){
   });
 
   var refRatesCollection = new RefRates();
-  refRatesCollection.fetch({
-    success: function(){
-      console.log('success fetching');
-    },
-
-    error: function() {
-      console.log('fetching error');
-    }
-  });
+  refRatesCollection.fetch();
 
   var ExtraPayment = Backbone.Model.extend({
     defaults: {
@@ -67,9 +59,6 @@ $(function(){
     }
   });
 
-  var ResultPenaltyView = ResultView.extend({
-  });
-
   //all section
   var ResultBlockView = Backbone.View.extend({
     tagName: 'section',
@@ -89,7 +78,7 @@ $(function(){
       $results = this.$('.results');
 
       collection.each(function (penalty) {
-        var view = new ResultPenaltyView({
+        var view = new ResultView({
           model: penalty,
           collection: collection
         });
@@ -99,29 +88,42 @@ $(function(){
     }
   });
 
-
-  var Details = Backbone.Model.extend({});
-  
-  var DetailsList = Backbone.Collection.extend({
-    model: Details
-  });
-
   var AppModel = Backbone.Model.extend({
-    defaults: {
-      'start_at': '',
-      'end_at': '',
-      'debt': ''
-    },
 
    validate: function(attr) {
       if(attr.start_at > attr.end_at){
         return 'wrong date!';
       }
-   }
+   },
+
+   getRefRate: function(date) {
+      var prevD  = 0,
+          rr = refRatesCollection.models[refRatesCollection.length - 1].get('Value');
+
+      var model = (_.find(refRatesCollection.models, function(model) {  return model.getMs() >= date }));
+      // set refinancing rate if period find
+      if (model){
+        rr = model.get('Value');
+      }
+
+      return rr;
+    },
+
+    getPenalty: function (debt, start_at, end_at, ref_rate) {
+      var dd = Math.floor((end_at - start_at) / 86400000) + 1;
+      return Math.round(debt * dd * ref_rate/36000);
+    },
+
+    dayDiff: function(start, end) {
+      // ms per day
+      return 
+    },
+
   });
  
+
   var AppView = Backbone.View.extend({  
-  
+
     events: {
       'click a#addExtra': 'addExtraLine',
       'click input#ok': 'addResult',
@@ -130,7 +132,7 @@ $(function(){
 
     initialize: function(){
       this.template = _.template($('#app-template').html());
-      _.bindAll(this, 'render', 'addExtraLine', 'addResult', 'addToExtra', 'getPenalty', 'getRefRate' ,  'dayDiff', 'dateFormat');
+      _.bindAll(this, 'render', 'addExtraLine', 'addResult', 'addToExtra', 'dateFormat');
     },
 
     render: function(){
@@ -165,9 +167,9 @@ $(function(){
 
     addResult: function(){
       var collection = this.collection,
-          getPenalty = this.getPenalty,
+          getPenalty = this.model.getPenalty,
           dateFormat = this.dateFormat,
-          getRefRate = this.getRefRate,
+          getRefRate = this.model.getRefRate,
           $body = $(this.el);
 
       
@@ -189,7 +191,7 @@ $(function(){
         extraCollection.each(function(ep){
           temp_end = ep.get('date');
           extraMoney = ep.get('money');
-          
+
           ref_rate = getRefRate(temp_end); //get ref rate on this date period
 
           var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
@@ -221,28 +223,6 @@ $(function(){
       });
     },
 
-    getPenalty: function (debt, start_at, end_at, ref_rate) {
-      return Math.round(debt * this.dayDiff(start_at, end_at) * ref_rate/36000);
-    },
-
-    dayDiff: function(start, end) {
-      // ms per day
-      return Math.floor((end - start) / 86400000) + 1;
-    },
-
-    getRefRate: function(date) {
-      var prevD  = 0,
-          rr = refRatesCollection.models[refRatesCollection.length - 1].get('Value');
-
-      var model = (_.find(refRatesCollection.models, function(model) {  return model.getMs() >= date }));
-      // set refinancing rate if period find
-      if (model){
-        rr = model.get('Value');
-      }
-
-      return rr;
-    },
-
     dateFormat: function (date){
       var d = new Date(date);
       return ( d.getMonth() + 1 +  "/" + d.getDate() + "/" + d.getFullYear());
@@ -259,8 +239,9 @@ $(function(){
     return details.get('date');
   };
 
+  var appModel = new AppModel();
   var resultBlockView = new ResultBlockView({ collection: results, el: '#result'}),
-      appView = new AppView({collection: results, extraCollection: extraCollection, el: '#details'});
+      appView = new AppView({model: appModel, collection: results, extraCollection: extraCollection, el: '#details'});
   
   appView.render();
   
