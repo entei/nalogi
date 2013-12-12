@@ -67,20 +67,22 @@ $(function(){
       _.bindAll(this, 'render');  
       this.template = _.template($('#result-template').html());
       //render the view each time the result collection changed
-      this.collection.bind('add', this.render, this);
+      this.model.results.bind('add', this.render, this);
     },
 
     render: function() {
       var $results, 
-          collection = this.collection;
+          results = this.model.results;
 
       $(this.el).html(this.template({})); 
       $results = this.$('.results');
 
-      collection.each(function (penalty) {
+      console.log("rendering results");
+
+      results.each(function (penalty) {
         var view = new ResultView({
           model: penalty,
-          collection: collection
+          collection: results
         });
         $results.append(view.render().el); //append each result line
       });
@@ -89,14 +91,42 @@ $(function(){
   });
 
   var AppModel = Backbone.Model.extend({
+  
+    defaults: {
+      debt: 0,
+      start: '0/0/0',
+      end: '0/0/0'
+    },
 
-   validate: function(attr) {
+    initialize: function() {
+      this.extraCollection = new ExtraCollection(),
+      this.results = new Results(),
+      this.bind('change', this.recalculate),
+      this.extraCollection.bind("change", this.recalculate);
+    },
+
+    recalculate: function() {
+      //need add info to result collection
+      console.log('some results has been added');
+      var debt = this.get('debt'),
+          start = this.get('start'),
+          end = this.get('end'),
+          ref_rate = 0;
+
+      // penalty for last period
+      ref_rate = this.getRefRate(end.getTime());
+      var lastPenalty = (this.getPenalty(debt, start, end, ref_rate)),
+          lastInterval = new Result({ start_at: this.dateFormat(start), end_at: this.dateFormat(end), ref_rate: ref_rate, penalty: lastPenalty});
+      this.results.add([lastInterval]);
+    },
+
+    validate: function(attr) {
       if(attr.start_at > attr.end_at){
         return 'wrong date!';
       }
-   },
+    },
 
-   getRefRate: function(date) {
+    getRefRate: function(date) {
       var prevD  = 0,
           rr = refRatesCollection.models[refRatesCollection.length - 1].get('Value');
 
@@ -112,13 +142,12 @@ $(function(){
     getPenalty: function (debt, start_at, end_at, ref_rate) {
       var dd = Math.floor((end_at - start_at) / 86400000) + 1;
       return Math.round(debt * dd * ref_rate/36000);
-    },
+    }, 
 
-    dayDiff: function(start, end) {
-      // ms per day
-      return 
-    },
-
+    dateFormat: function (date){
+      var d = new Date(date);
+      return ( d.getMonth() + 1 +  "/" + d.getDate() + "/" + d.getFullYear());
+    }
   });
  
 
@@ -132,7 +161,7 @@ $(function(){
 
     initialize: function(){
       this.template = _.template($('#app-template').html());
-      _.bindAll(this, 'render', 'addExtraLine', 'addResult', 'addToExtra', 'dateFormat');
+      _.bindAll(this, 'render', 'addExtraLine', 'addResult', 'addToExtra');
     },
 
     render: function(){
@@ -155,10 +184,9 @@ $(function(){
           endDate: now
         }).on('changeDate', function(ev){
           if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf() || ev.date.valueOf()  > end_at.datepicker('getDate').valueOf()){
-            console.log('wrong extra date!');
             $(this).datepicker("update", start_at.datepicker('getDate'));
           }
-        });
+      });
     },
 
     removeExtraLine: function(){
@@ -166,27 +194,27 @@ $(function(){
     },
 
     addResult: function(){
-      var collection = this.collection,
+      var collection = this.model.results,
           getPenalty = this.model.getPenalty,
           dateFormat = this.dateFormat,
           getRefRate = this.model.getRefRate,
           $body = $(this.el);
 
+      console.log(collection.length + ' result collection length from model ');
       
       $('#error').hide();
         collection.reset();//reset result collection
         extraCollection.reset(); //reset extra details collection
 
-        //if extra details present
+        this.model.set({
+          debt: $body.find('#debt').val(),
+          start: $body.find('#start_at').datepicker('getDate'),
+          end: $body.find('#end_at').datepicker('getDate'),
+        });
+ 
       if($('.extraPayment').size != 0){
-   
+        
         this.addToExtra();//call function
-
-        var debt = $body.find('#debt').val(),
-            start = $body.find('#start_at').datepicker('getDate'),
-            end = $body.find('#end_at').datepicker('getDate'),
-            ref_rate = 0; 
-        //alert(extraCollection.pluck('money'));
 
         extraCollection.each(function(ep){
           temp_end = ep.get('date');
@@ -201,13 +229,9 @@ $(function(){
           debt -= parseFloat(extraMoney); //new_debt = debt - extraPay 
           start = temp_end + 86400000; //new period without start day (in ms)
         });
-      }
-
+      }   
       // penalty for last period
-      ref_rate = getRefRate(end.getTime());
-      var lastPenalty = (getPenalty(debt, start, end, ref_rate)),
-          lastInterval = new Result({ start_at: dateFormat(start), end_at: dateFormat(end), ref_rate: ref_rate, penalty: lastPenalty});
-      collection.add([lastInterval]);
+
     },  
 
     addToExtra: function() {
@@ -216,17 +240,11 @@ $(function(){
             end_interval = $extraDiv.find('[name="extraDate"]').datepicker('getDate').valueOf(), //getTime(); //end of period
             money = $extraDiv.find('[name="money"]').val();
         if(end_interval != 0 && money != 0 ){
-          // console.log('Date -> ' + end_interval + ' money -> ' +  money);
           var extraDetails = new ExtraPayment({date: end_interval, money: money});// create new payment instance
           extraCollection.add([extraDetails]); //add item to collection of extra payment 
         }
       });
     },
-
-    dateFormat: function (date){
-      var d = new Date(date);
-      return ( d.getMonth() + 1 +  "/" + d.getDate() + "/" + d.getFullYear());
-    }
 
   });
 
@@ -240,8 +258,8 @@ $(function(){
   };
 
   var appModel = new AppModel();
-  var resultBlockView = new ResultBlockView({ collection: results, el: '#result'}),
-      appView = new AppView({model: appModel, collection: results, extraCollection: extraCollection, el: '#details'});
+  var resultBlockView = new ResultBlockView({ model: appModel, el: '#result'}),
+      appView = new AppView({model: appModel, el: '#details'});
   
   appView.render();
   

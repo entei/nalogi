@@ -1,0 +1,164 @@
+[6:00:24 PM] Seva Rybakov: var debt = $body.find('#debt').val(),
+                                     start = $body.find('#start_at').datepicker('getDate'),
+                                     end = $body.find('#end_at').datepicker('getDate'),
+[6:00:34 PM] Seva Rybakov: вся эта херня
+[6:00:42 PM] Seva Rybakov: должна быть в какой-то модели
+[6:00:55 PM] Seva Rybakov: и обновляться посредствам вьюшки-контрольчика
+[6:01:57 PM] Seva Rybakov: короче
+[6:02:02 PM] Seva Rybakov: рефакторим
+[6:02:20 PM] Seva Rybakov: 1. перенеси все библиотеки в папку vendor
+[6:02:53 PM] Seva Rybakov: 2. размести все модели в папку models, все коллекции в папку collections и все вьюшки в папку views
+[6:02:59 PM] Seva Rybakov: по файлику на каждую сущность
+[6:03:55 PM] Seva Rybakov: https://github.com/evados/nalogi/blob/master/public/js/index.js
+[6:04:01 PM] Seva Rybakov: это еще что за файлик?
+[6:04:21 PM] Евгений: левый
+[6:04:23 PM] Евгений: удалю
+[6:04:42 PM] Seva Rybakov: и короче
+[6:04:45 PM] Seva Rybakov: еще такая тема
+[6:04:57 PM] Seva Rybakov: сделай бранч от мастера
+[6:05:04 PM] Seva Rybakov: назови его refactoring
+[6:05:08 PM] Seva Rybakov: и вали кодяру там
+[6:05:10 PM] Евгений: k
+[6:05:18 PM] Seva Rybakov: и делай часто коммиты
+[6:05:21 PM] Seva Rybakov: что-то сделал
+[6:05:24 PM] Seva Rybakov: сразу коммит
+[6:05:30 PM] Seva Rybakov: а не коммит раз в неделю :)
+[6:06:38 PM] Евгений: короче ладно,  рефакторинг мне тоже на 100500 тасок разбивать ?
+[6:06:50 PM] Seva Rybakov: одну таску создай
+[6:09:05 PM] Seva Rybakov: и в package.json
+[6:09:10 PM] Seva Rybakov: добавь xml2json
+[6:09:49 PM] Евгений: в депендентс?
+[6:10:01 PM] Seva Rybakov: npm install xml2json --save
+[6:11:29 PM] Seva Rybakov: git rm -r --cached node_modules
+echo "node_modules" > .gitignore
+git add .gitignore
+git commit -m "removed node_modules from source control"
+git push
+[6:11:38 PM] Seva Rybakov: ты понял о чем я тут?)
+[6:13:10 PM] Евгений: ок
+[6:13:20 PM] Евгений: я уже добавл
+[6:13:22 PM] Евгений: еще не пушил
+[6:13:23 PM] Евгений: просто
+[6:15:46 PM] Seva Rybakov: так пуш
+[6:15:53 PM] Seva Rybakov: и бранч сделай
+[6:15:55 PM] Seva Rybakov: и его пушни
+[6:15:58 PM] Евгений: ок
+[6:16:08 PM] Seva Rybakov: чем чаще ты коммитишь, тем лучше
+[6:16:18 PM] Евгений: я уже понял, Сева)
+[7:49:21 PM] Евгений: > [Wednesday, December 11, 2013 6:00:24 PM Seva Rybakov] … var debt = $body.find('#debt').val(),
+                                     start = $body.find('#start_at').datepicker('getDate'),
+                                     end = $body.find('#end_at').datepicker('getDate'),
+
+> [Wednesday, December 11, 2013 6:00:34 PM Seva Rybakov] вся эта херня
+
+> [Wednesday, December 11, 2013 6:00:42 PM Seva Rybakov] должна быть в какой-то модели
+
+> [Wednesday, December 11, 2013 6:00:55 PM Seva Rybakov] и обновляться посредствам вьюшки-контрольчика
+
+можешь подробнее?
+[7:55:28 PM] Seva Rybakov: да, могу
+[7:55:38 PM] Missed call from Seva Rybakov.
+[7:55:47 PM] Евгений: уши сломались
+[7:55:53 PM] Seva Rybakov: ясно
+[7:55:55 PM] Seva Rybakov: короче
+[7:55:58 PM] Евгений: в 2 словах
+[7:56:04 PM] Seva Rybakov: в двух словах
+[8:00:37 PM] Seva Rybakov: 
+var ApplicationModel = Backbone.Model.extend({
+  defaults: {
+    from: '',
+    to: '',
+    money,
+  } 
+
+  initialize: function() {
+     this.extraPayments = new ExtraPayments();
+     this.results = new Results();
+     this.on(“change”, this.recalculate);
+     this.extraPayments.on(“change”, this.recalculate);
+   }
+
+   recalculate: function() {
+     //some logic
+   }
+})
+[8:01:51 PM] Seva Rybakov: так
+[8:02:01 PM] Seva Rybakov: это AppModel
+[8:02:12 PM] Seva Rybakov: который инкапсулирует в себе
+[8:02:14 PM] Евгений: я понял все
+[8:02:19 PM] Seva Rybakov: экстрапейменты и резалты
+[8:02:20 PM] Seva Rybakov: вот
+[8:02:23 PM] Евгений: спасибо
+[8:02:25 PM] Евгений: сейчас будет
+[8:02:30 PM] Seva Rybakov: стой
+[8:02:32 PM] Евгений: а
+[8:02:33 PM] Seva Rybakov: смотри дальше
+[8:02:35 PM] Seva Rybakov: обычно
+[8:03:01 PM] Seva Rybakov: для экстра пейментов
+[8:03:13 PM] Seva Rybakov: должны быть extraPaymentView
+[8:03:23 PM] Seva Rybakov: и extraPaymentsView
+[8:03:55 PM] Евгений: я думал сразу сделать, но передумал)
+[8:04:13 PM] Seva Rybakov: вьюха для коллекции слушает на добавление/удаление
+[8:04:45 PM] Seva Rybakov: вьюха для item занимается самим экстрапейментом
+[8:04:54 PM] Seva Rybakov: и еще
+[8:05:35 PM] Seva Rybakov: var Layout = Backbone.View.Extend({
+   model: new ApplicationModel(),
+
+   initialize: function() {
+     // создать вьюхи для this.model, this.model.extraPayments, this.model.results
+     // и зааппендить их в нужные дивки
+   }
+})
+[8:07:51 PM] Seva Rybakov: тут понятно?
+[8:08:09 PM] Евгений: да
+[8:08:13 PM] Евгений: мне это делать нужно ?
+[8:08:19 PM] Seva Rybakov: да
+[8:08:34 PM] Seva Rybakov: прикол в том
+[8:08:37 PM] Seva Rybakov: что
+[8:09:38 PM] Seva Rybakov: var model = new ApplicationModel();
+new ApplicationLayout({model: model}).render().appendTo($('body'));
+[8:09:57 PM] Seva Rybakov: это весь код, который нужно запустить, чтобы запустилось приложение
+[8:10:34 PM] Seva Rybakov: объявления классов не должны быть в $(fucntion() {})
+[8:10:40 PM] Евгений: окей, будем рефакторить
+[8:10:47 PM] Seva Rybakov: гогого
+[8:10:50 PM] Евгений: =)
+[8:10:58 PM] Seva Rybakov: :)
+[8:11:16 PM] Seva Rybakov: предусмотри еще
+[8:11:20 PM] Seva Rybakov: возможность
+[8:11:24 PM] Seva Rybakov: удалять
+[8:11:32 PM] Seva Rybakov: extraPayments
+[8:11:55 PM] Seva Rybakov: и еще
+[8:12:10 PM] Seva Rybakov: itemView должна иметь ссылку на collectionView
+[8:12:31 PM] Евгений: экстра пайментсы ж удаляются
+[8:12:39 PM] Евгений: или для каждого
+[8:12:41 PM] Seva Rybakov: yу хз
+[8:12:43 PM] Seva Rybakov: короче
+[8:12:47 PM] Seva Rybakov: чтобы было интереснее
+[8:13:01 PM] Seva Rybakov: лимит на тело одного метода - 8 строчек кода
+[8:13:02 PM] Seva Rybakov: :)
+[8:13:11 PM] Евгений: лол
+[8:13:34 PM] Seva Rybakov: разберись с табами
+[8:13:36 PM] Seva Rybakov: и
+[8:13:47 PM] Евгений: разобрался
+[8:13:49 PM] Евгений: с табами
+[8:14:06 PM] Евгений: там галочку поставить надо было
+[8:14:07 PM] Seva Rybakov: не больше 100 символов в линии
+[8:14:21 PM] Seva Rybakov: чтобы читабельно было
+[8:14:31 PM] Seva Rybakov: и охуенски :)
+[8:15:16 PM] Seva Rybakov: $('<div class="extraPayment"><div class="input-append date" ><input class="span2" type="text" name="extraDate" placeholder="Дата"/><span class="add-on"><i class="icon-calendar"></i></span></div><input type="text" class="numbersOnly" id="money" name="money" placeholder="Сумма"></div>').appendTo($('.extra'));
+[8:15:19 PM] Евгений: ладно, это на долго
+[8:15:22 PM] Евгений: я понял про что ты)
+[8:15:23 PM] Seva Rybakov: и чтобы без вот такого
+[8:15:31 PM] Евгений: это к 100 строчкам
+[8:15:36 PM] Евгений: ?
+[8:15:46 PM] Seva Rybakov: это должен быть темплейт и вьюха
+[8:15:49 PM] Евгений: ок
+
+
+1. все сущности в отдельных файлах
+2. вся логика в моделях и коллекциях
+3. ApplicationModel инкапсулирует коллекции refinancingRates, extraPayments и results. содержит метот recalculate, который все считает
+4. LayoutView инстанциирует TaxView, ExtraPaymentsView, resultsView
+5. ExtraPaymentsView реагирует на изменения в коллекции ExtraPayments и рендерит в себя вьюшки с ExtraPayment
+6. ResultsView просто рендерит коллекцию Results
+7. Вьюшки подписываются на изменения в коллекциях и моделях и отвечают ТОЛЬКО за логику отображения
