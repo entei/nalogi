@@ -27,7 +27,11 @@ $(function(){
   });
   
   var ExtraCollection = Backbone.Collection.extend({
-    model: ExtraPayment
+    model: ExtraPayment, 
+
+    comparator: function(details) {
+      return details.get('date')
+    }
   });
   
   var Result = Backbone.Model.extend({
@@ -43,13 +47,52 @@ $(function(){
     model: Result
   });
 
-  // 1 interval
+  //extra block
+  var ExtraBlockView = Backbone.View.extend({
+    tagName: 'div',
+    
+    events: {
+      'click a#addExtra' : 'addExtraLine',
+      'click #rm': 'removeExtraLine'
+    },
+
+    initialize: function() {
+      _.bindAll(this, 'render');
+      this.template = _.template($('#extraBlock-template').html());
+    },
+
+    render: function() {
+      $(this.el).html(this.template());
+    },
+
+    addExtraLine: function(){
+      $('<div class="extraPayment"><div class="input-append date" ><input class="span2" type="text" name="extraDate" placeholder="Дата"/><span class="add-on"><i class="icon-calendar"></i></span></div><input type="text" class="numbersOnly" id="money" name="money" placeholder="Сумма"></div>').appendTo($('.extra'));
+      
+      $('.numbersOnly').keyup(function () { 
+          this.value = this.value.replace(/[^0-9\.]/g,'');
+      });
+
+      $('[name="extraDate"]').datepicker({
+          endDate: now
+        }).on('changeDate', function(ev){
+          if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf() || ev.date.valueOf()  > end_at.datepicker('getDate').valueOf()){
+            $(this).datepicker("update", start_at.datepicker('getDate'));
+          }
+      });
+    },
+
+    removeExtraLine: function(){
+      $(this.el).find('.extraPayment').last().remove();
+    },
+  });
+
+  // 1 interval(result)
   var ResultView = Backbone.View.extend({
     tag: 'li',
     
     initialize: function(){
       _.bindAll(this, 'render');
-      this.template = _.template($('#penalty-template').html())
+      this.template = _.template($('#penalty-template').html());
     },
 
     render: function() {
@@ -77,8 +120,6 @@ $(function(){
       $(this.el).html(this.template({})); 
       $results = this.$('.results');
 
-      console.log("rendering results");
-
       results.each(function (penalty) {
         var view = new ResultView({
           model: penalty,
@@ -99,19 +140,43 @@ $(function(){
     },
 
     initialize: function() {
+      _.bindAll(this, 'recalculate');
       this.extraCollection = new ExtraCollection(),
       this.results = new Results(),
       this.bind('change', this.recalculate),
-      this.extraCollection.bind("change", this.recalculate);
+      this.extraCollection.bind('add', this.recalculate, this);
+      extraBlockView = new ExtraBlockView({el: '.extra'}).render();
     },
 
     recalculate: function() {
+      var getPenalty = this.getPenalty,
+          dateFormat = this.dateFormat,
+          getRefRate = this.getRefRate,
+          results = this.results;
+
+      results.reset();
+
       //need add info to result collection
-      console.log('some results has been added');
-      var debt = this.get('debt'),
+      var debt = this.get('debt'), 
           start = this.get('start'),
           end = this.get('end'),
           ref_rate = 0;
+
+      if(this.extraCollection.length != 0) {
+        this.extraCollection.each(function(ep){
+          temp_end = ep.get('date');
+          extraMoney = ep.get('money');
+
+          ref_rate = getRefRate(temp_end); //get ref rate on this date period
+
+          var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
+              result = new Result({start_at: dateFormat(start), end_at: dateFormat(temp_end), ref_rate: ref_rate, penalty: penalty});
+          
+          results.add([result]); // add result to result collection
+          debt -= parseFloat(extraMoney); //new_debt = debt - extraPay
+          start = temp_end + 86400000; //new period without start day (in ms)
+        });
+      }
 
       // penalty for last period
       ref_rate = this.getRefRate(end.getTime());
@@ -150,18 +215,16 @@ $(function(){
     }
   });
  
-
   var AppView = Backbone.View.extend({  
 
     events: {
-      'click a#addExtra': 'addExtraLine',
       'click input#ok': 'addResult',
-      'click #rm': 'removeExtraLine'
     },
 
     initialize: function(){
+      this.extraCollection = this.model.extraCollection;
       this.template = _.template($('#app-template').html());
-      _.bindAll(this, 'render', 'addExtraLine', 'addResult', 'addToExtra');
+      _.bindAll(this, 'render', 'addResult');
     },
 
     render: function(){
@@ -173,37 +236,12 @@ $(function(){
       });
     }, 
     
-    addExtraLine: function(){
-      $('<div class="extraPayment"><div class="input-append date" ><input class="span2" type="text" name="extraDate" placeholder="Дата"/><span class="add-on"><i class="icon-calendar"></i></span></div><input type="text" class="numbersOnly" id="money" name="money" placeholder="Сумма"></div>').appendTo($('.extra'));
-      
-      $('.numbersOnly').keyup(function () { 
-          this.value = this.value.replace(/[^0-9\.]/g,'');
-      });
-
-      $('[name="extraDate"]').datepicker({
-          endDate: now
-        }).on('changeDate', function(ev){
-          if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf() || ev.date.valueOf()  > end_at.datepicker('getDate').valueOf()){
-            $(this).datepicker("update", start_at.datepicker('getDate'));
-          }
-      });
-    },
-
-    removeExtraLine: function(){
-      $(this.el).find('.extraPayment').last().remove();
-    },
-
     addResult: function(){
       var collection = this.model.results,
-          getPenalty = this.model.getPenalty,
-          dateFormat = this.dateFormat,
-          getRefRate = this.model.getRefRate,
+          extraCollection = this.model.extraCollection,
           $body = $(this.el);
-
-      console.log(collection.length + ' result collection length from model ');
-      
+     
       $('#error').hide();
-        collection.reset();//reset result collection
         extraCollection.reset(); //reset extra details collection
 
         this.model.set({
@@ -211,56 +249,26 @@ $(function(){
           start: $body.find('#start_at').datepicker('getDate'),
           end: $body.find('#end_at').datepicker('getDate'),
         });
- 
-      if($('.extraPayment').size != 0){
-        
-        this.addToExtra();//call function
 
-        extraCollection.each(function(ep){
-          temp_end = ep.get('date');
-          extraMoney = ep.get('money');
-
-          ref_rate = getRefRate(temp_end); //get ref rate on this date period
-
-          var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
-              result = new Result({start_at: dateFormat(start), end_at: dateFormat(temp_end), ref_rate: ref_rate, penalty: penalty});
-
-          collection.add([result]); // add result to collection
-          debt -= parseFloat(extraMoney); //new_debt = debt - extraPay 
-          start = temp_end + 86400000; //new period without start day (in ms)
+      if($('.extraPayment').size() != 0){
+        $('.extraPayment').each(function(index){
+          var $extraDiv = $(this),
+              end_interval = $extraDiv.find('[name="extraDate"]').datepicker('getDate').valueOf(), //getTime(); //end of period
+              money = $extraDiv.find('[name="money"]').val();
+          if(end_interval != 0 && money != 0 ){
+            var extraDetails = new ExtraPayment({date: end_interval, money: money});// create new payment instance
+            extraCollection.add([extraDetails]); //add item to collection of extra payment
+          }
         });
       }   
-      // penalty for last period
-
     },  
-
-    addToExtra: function() {
-      $('.extraPayment').each(function(index){
-        var $extraDiv = $(this),
-            end_interval = $extraDiv.find('[name="extraDate"]').datepicker('getDate').valueOf(), //getTime(); //end of period
-            money = $extraDiv.find('[name="money"]').val();
-        if(end_interval != 0 && money != 0 ){
-          var extraDetails = new ExtraPayment({date: end_interval, money: money});// create new payment instance
-          extraCollection.add([extraDetails]); //add item to collection of extra payment 
-        }
-      });
-    },
-
   });
 
-
-  var results = new Results(); //collection
   
-  var extraCollection = new ExtraCollection();
- 
-  extraCollection.comparator = function(details) {
-    return details.get('date');
-  };
-
   var appModel = new AppModel();
   var resultBlockView = new ResultBlockView({ model: appModel, el: '#result'}),
       appView = new AppView({model: appModel, el: '#details'});
-  
+ 
   appView.render();
   
   var nowTemp = new Date(),
