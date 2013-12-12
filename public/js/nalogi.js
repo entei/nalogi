@@ -47,10 +47,21 @@ $(function(){
     model: Result
   });
 
+  //extra Payment view 
+  var ExtraPaymentView = Backbone.View.extend({
+    initialize: function() {
+      _.bindAll(this, 'render');
+      this.template = _.template($('#extraItem-template').html());
+    },
+    render: function() {
+      var renderedContent = this.template();
+      $(this.el).html(renderedContent);
+      return this;
+    } 
+  });
+
   //extra block
-  var ExtraBlockView = Backbone.View.extend({
-    tagName: 'div',
-    
+  var ExtraBlockView = Backbone.View.extend({   
     events: {
       'click a#addExtra' : 'addExtraLine',
       'click #rm': 'removeExtraLine'
@@ -66,11 +77,9 @@ $(function(){
     },
 
     addExtraLine: function(){
-      $('<div class="extraPayment"><div class="input-append date" ><input class="span2" type="text" name="extraDate" placeholder="Дата"/><span class="add-on"><i class="icon-calendar"></i></span></div><input type="text" class="numbersOnly" id="money" name="money" placeholder="Сумма"></div>').appendTo($('.extra'));
-      
-      $('.numbersOnly').keyup(function () { 
-          this.value = this.value.replace(/[^0-9\.]/g,'');
-      });
+      //$('<div class="extraPayment"><div class="input-append date" ><input class="span2" type="text" name="extraDate" placeholder="Дата"/><span class="add-on"><i class="icon-calendar"></i></span></div><input type="text" class="numbersOnly" id="money" name="money" placeholder="Сумма"></div>').appendTo($('.extra'));
+      extraPaymentView = new ExtraPaymentView();
+      $('.extraLine').append(extraPaymentView.render().el); 
 
       $('[name="extraDate"]').datepicker({
           endDate: now
@@ -114,7 +123,7 @@ $(function(){
     },
 
     render: function() {
-      var $results, 
+      var $results,
           results = this.model.results;
 
       $(this.el).html(this.template({})); 
@@ -263,8 +272,8 @@ $(function(){
       }   
     },  
   });
-
   
+
   var appModel = new AppModel();
   var resultBlockView = new ResultBlockView({ model: appModel, el: '#result'}),
       appView = new AppView({model: appModel, el: '#details'});
