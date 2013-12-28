@@ -1,7 +1,11 @@
-  var ExtraCollection = Backbone.Collection.extend({
-    model: ExtraPayment, 
+var app = app || {};
+
+(function(){
+  app.ExtraCollection = Backbone.Collection.extend({
+    model: app.ExtraPayment, 
 
     comparator: function(details) {
-      return details.get('d')
+      return parseInt(details.get('d'));
     }
   });
+})();

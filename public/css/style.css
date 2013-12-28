@@ -3,6 +3,10 @@ body {
   margin: 0 auto;
 }
 
+.extraPayment {
+  margin-top: 10px;
+}
+
 #error {
 	display: none;
 }

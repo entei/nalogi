@@ -1,9 +1,16 @@
+var app = app || {};
+(function() {
   //extra Payment view 
-  var ExtraPaymentView = Backbone.View.extend({
+  app.ExtraPaymentView = Backbone.View.extend({
+
+    events: {
+      'change input#money': 'changeMoney'
+    },
 
     initialize: function() {
-      _.bindAll(this, 'render');
+      _.bindAll(this, 'render', 'changeMoney', 'unrender');
       this.template = _.template($('#extraItem-template').html());
+      this.model.bind('remove', this.unrender);
     },
 
     render: function() {
@@ -19,5 +26,14 @@
           // }
       });
       return this;
-    } 
-  });
+    },
+
+    unrender: function() {
+      $(this.el).remove();
+    },
+
+    changeMoney: function(ev) {
+      this.model.set({'money': ev.target.value });
+    }
+  }); 
+})();

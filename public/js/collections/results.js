@@ -1,3 +1,6 @@
-  var Results = Backbone.Collection.extend({
-    model: Result
+var app = app || {};
+(function() {
+  app.Results = Backbone.Collection.extend({
+    model: app.Result
   });
+})();

@@ -1,4 +1,7 @@
-  var ResultBlockView = Backbone.View.extend({
+var app = app || {};
+(function() {
+  //all section
+  app.ResultBlockView = Backbone.View.extend({
     tagName: 'section',
 
     initialize: function() {
@@ -16,7 +19,7 @@
       $results = this.$('.results');
 
       results.each(function (penalty) {
-        var view = new ResultView({
+        var view = new app.ResultView({
           model: penalty,
           collection: results
         });
@@ -24,4 +27,5 @@
       });
       return this;
     }
-  });
+  }); 
+})();

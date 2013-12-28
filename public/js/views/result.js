@@ -1,5 +1,7 @@
+var app = app || {};
+(function() {
   // 1 interval(result)
-  var ResultView = Backbone.View.extend({
+  app.ResultView = Backbone.View.extend({
     tag: 'li',
     
     initialize: function(){
@@ -13,3 +15,4 @@
       return this;
     }
   });
+})();
