@@ -50,8 +50,12 @@ $(function(){
   //extra Payment view 
   var ExtraPaymentView = Backbone.View.extend({
 
+    events: {
+      'change #money': 'changeMoney'
+    },
+
     initialize: function() {
-      _.bindAll(this, 'render');
+      _.bindAll(this, 'render', 'changeMoney');
       this.template = _.template($('#extraItem-template').html());
     },
 
@@ -68,7 +72,11 @@ $(function(){
           // }
       });
       return this;
-    } 
+    },
+
+    changeMoney: function(ev) {
+      this.model.set({'money': ev.target.value });
+    }
   });
 
   //extra block
@@ -82,16 +90,9 @@ $(function(){
     initialize: function() {
       _.bindAll(this, 'render');
       this.template = _.template($('#extraBlock-template').html());
-      // this.model.extraCollection.bind('add', this.addLine);
+      //this.model.extraCollection.bind('add', this.addLine);
       // this.model.extraCollection.bind('remove', this.render);    
     },
-
-    // addLine: function() {
-    //  // var model = new ExtraPayment();
-    // //  this.model.extraCollection.add([model]);
-    //   extraPaymentView = new ExtraPaymentView({model: model});
-    //   $('.extraLine').append(extraPaymentView.render().el);
-    // },
 
     render: function() {
       $(this.el).html(this.template());
@@ -166,7 +167,7 @@ $(function(){
       _.bindAll(this, 'recalculate');
       this.extraCollection = new ExtraCollection(),
       this.results = new Results(),
-      this.bind('change', this.recalculate);//fix it
+      this.bind('change', this.recalculate);
       this.extraCollection.bind('change', this.recalculate, this);
     },
 
@@ -193,15 +194,16 @@ $(function(){
           //ref_rate = getRefRate(temp_end); //get ref rate on this date period
           var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
               result = new Result({start_at: dateFormat(start), end_at: dateFormat(temp_end), ref_rate: ref_rate, penalty: penalty});
-          console.log('penalty ' + penalty)
+
           results.add([result]); // add result to result collection
           debt -= parseFloat(extraMoney); //new_debt = debt - extraPay
-          start = temp_end + 86400000; //new period without start day (in ms)
+          start = parseInt(temp_end) + 86400000; //new period without start day (in ms)
         });
 
       // penalty for last period
       //ref_rate = this.getRefRate(end.getTime());
       ref_rate = 23.7;
+      console.log('START of the last period: ' + start);
       var lastPenalty = (this.getPenalty(debt, start, end, ref_rate)),
           lastInterval = new Result({ start_at: this.dateFormat(start), end_at: this.dateFormat(end), ref_rate: ref_rate, penalty: lastPenalty});
           //lastInterval = new Result({ start_at: (start), end_at: (end), ref_rate: ref_rate, penalty: lastPenalty});
