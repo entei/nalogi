@@ -21,7 +21,7 @@ $(function(){
 
   var ExtraPayment = Backbone.Model.extend({
     defaults: {
-      d: '0', 
+      d: new Date, 
       money: 0
     }
   });
@@ -30,7 +30,7 @@ $(function(){
     model: ExtraPayment, 
 
     comparator: function(details) {
-      return details.get('d')
+      return parseInt(details.get('d'));
     }
   });
   
@@ -51,7 +51,7 @@ $(function(){
   var ExtraPaymentView = Backbone.View.extend({
 
     events: {
-      'change #money': 'changeMoney'
+      'change input#money': 'changeMoney'
     },
 
     initialize: function() {
@@ -186,6 +186,7 @@ $(function(){
           ref_rate = 0;
 
       if(this.extraCollection.length != 0)
+        console.log(this.extraCollection.pluck('d'));
         this.extraCollection.each(function(ep) {
           temp_end = ep.get('d');
           extraMoney = ep.get('money');
