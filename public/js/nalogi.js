@@ -55,8 +55,9 @@ $(function(){
     },
 
     initialize: function() {
-      _.bindAll(this, 'render', 'changeMoney');
+      _.bindAll(this, 'render', 'changeMoney', 'unrender');
       this.template = _.template($('#extraItem-template').html());
+      this.model.bind('remove', this.unrender);
     },
 
     render: function() {
@@ -74,6 +75,10 @@ $(function(){
       return this;
     },
 
+    unrender: function() {
+      $(this.el).remove();
+    },
+
     changeMoney: function(ev) {
       this.model.set({'money': ev.target.value });
     }
@@ -88,10 +93,8 @@ $(function(){
     },
 
     initialize: function() {
-      _.bindAll(this, 'render');
-      this.template = _.template($('#extraBlock-template').html());
-      //this.model.extraCollection.bind('add', this.addLine);
-      // this.model.extraCollection.bind('remove', this.render);    
+      _.bindAll(this, 'render', 'removeExtraLine');
+      this.template = _.template($('#extraBlock-template').html()); 
     },
 
     render: function() {
@@ -106,7 +109,9 @@ $(function(){
     },
 
     removeExtraLine: function(){
-     // model.extraCollection.remove();
+      ec = this.model.extraCollection;
+      ec.remove(ec.last());
+      ec.pluck('d');
     },
   });
 
@@ -168,7 +173,8 @@ $(function(){
       this.extraCollection = new ExtraCollection(),
       this.results = new Results(),
       this.bind('change', this.recalculate);
-      this.extraCollection.bind('change', this.recalculate, this);
+      this.extraCollection.bind('change', this.recalculate);
+      this.extraCollection.bind('remove', this.recalculate);
     },
 
     recalculate: function() {
@@ -267,21 +273,21 @@ $(function(){
           endDate: new Date
         }).on('changeDate', function(ev){
           model.set({start: [ev.date.valueOf()]});
-          // if(ev.date.valueOf() > end_at.datepicker('getDate').valueOf()){
-          //   $error.text('Дата погашения должна быть больше даты возникновения задолженности');
-          //   $error.show();
-          //   start_at.datepicker("update", end_at.datepicker('getDate'));
-          // }
+          if(ev.date.valueOf() > end_at.datepicker('getDate').valueOf()){
+            $error.text('Дата погашения должна быть больше даты возникновения задолженности');
+            $error.show();
+            start_at.datepicker("update", end_at.datepicker('getDate'));
+          }
         }),
       end_at = $('#end_at').datepicker({
           endDate: new Date
         }).on('changeDate', function(ev){
           model.set({end: [ev.date.valueOf()]});
-          // if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf()){
-          //   $error.text('Дата погашения должна быть больше даты возникновения задолженности');
-          //   $error.show();
-          //   end_at.datepicker("update", start_at.datepicker('getDate'));
-          // }
+          if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf()){
+            $error.text('Дата погашения должна быть больше даты возникновения задолженности');
+            $error.show();
+            end_at.datepicker("update", start_at.datepicker('getDate'));
+          }
       });
     }, 
     
@@ -306,15 +312,10 @@ $(function(){
     }
   });
     
- var model = new AppModel();
- new ApplicationLayout({model: model}).render();
- 
-      $('.numbersOnly').keyup(function () { 
-          this.value = this.value.replace(/[^0-9\.]/g,'');
-      });
-
-  //    var nowTemp = new Date(),
-  //    now = (new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0));
-
-
+  var model = new AppModel();
+  new ApplicationLayout({model: model}).render();
+  
+  $('.numbersOnly').keyup(function () { 
+      this.value = this.value.replace(/[^0-9\.]/g,'');
+  });
 });
