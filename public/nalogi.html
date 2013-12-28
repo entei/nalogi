@@ -12,25 +12,20 @@
     <link type="text/css" rel="stylesheet" href="css/bootstrap.css" />
     <link type="text/css" rel="stylesheet" href="css/datepicker.css" />
     <link type="text/css" rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
-    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-    <script src="js/underscore.js"></script>
-    <!-- <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> -->
-    <script src="js/bootstrap-datepicker.js"></script>
-    <script src="js/backbone.js"></script>
+    <script src="js/vendor/underscore.js"></script>
+    <script src="js/vendor/jquery-1.10.2.min.js"></script>
+    <script src="js/vendor/bootstrap-datepicker.js"></script>
+    <script src="js/vendor/backbone.js"></script>
     <script src="js/nalogi.js"></script>
-    <script type="text/javascript">
-      $('.numbersOnly').keyup(function () { 
-          this.value = this.value.replace(/[^0-9\.]/g,'');
-      });
-    </script>
+    <script src="js/collections"></script>
+    <script src="js/models"></script>
+    <script src="js/view"></script>
 
    <script type="text/template" id="app-template">
       <div class="input-append date" ><input type="text" id="start_at" class="span2" placeholder="Start date here"/><span class="add-on"><i class="icon-calendar"></i></span></div>
       <div class="input-append date" ><input class="span2" type="text" id="end_at" placeholder="End date here"/><span class="add-on"><i class="icon-calendar"></i></span></div>
       <p><input type="text" class="numbersOnly" id="debt" placeholder="Сумма"/><p>
       <legend>Промежуточные платежи:</legend>
-      <p><input type="button" id="ok" class="btn" value="Посчитать" /></p>
     </script>
 
     <script type="text/template" id="extraBlock-template">

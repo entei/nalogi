@@ -21,7 +21,7 @@ $(function(){
 
   var ExtraPayment = Backbone.Model.extend({
     defaults: {
-      date: '0', 
+      d: '0', 
       money: 0
     }
   });
@@ -30,7 +30,7 @@ $(function(){
     model: ExtraPayment, 
 
     comparator: function(details) {
-      return details.get('date')
+      return details.get('d')
     }
   });
   
@@ -49,19 +49,31 @@ $(function(){
 
   //extra Payment view 
   var ExtraPaymentView = Backbone.View.extend({
+
     initialize: function() {
       _.bindAll(this, 'render');
       this.template = _.template($('#extraItem-template').html());
     },
+
     render: function() {
+      model = this.model; 
       var renderedContent = this.template();
       $(this.el).html(renderedContent);
+      $(this.el).find('[name="extraDate"]').datepicker({
+          endDate: new Date()
+        }).on('changeDate', function(ev){
+           model.set({d: [ev.date.valueOf()]});
+          // if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf() || ev.date.valueOf()  > end_at.datepicker('getDate').valueOf()){
+          //   $(this).datepicker("update", start_at.datepicker('getDate'));
+          // }
+      });
       return this;
     } 
   });
 
   //extra block
   var ExtraBlockView = Backbone.View.extend({   
+
     events: {
       'click a#addExtra' : 'addExtraLine',
       'click #rm': 'removeExtraLine'
@@ -70,28 +82,30 @@ $(function(){
     initialize: function() {
       _.bindAll(this, 'render');
       this.template = _.template($('#extraBlock-template').html());
+      // this.model.extraCollection.bind('add', this.addLine);
+      // this.model.extraCollection.bind('remove', this.render);    
     },
+
+    // addLine: function() {
+    //  // var model = new ExtraPayment();
+    // //  this.model.extraCollection.add([model]);
+    //   extraPaymentView = new ExtraPaymentView({model: model});
+    //   $('.extraLine').append(extraPaymentView.render().el);
+    // },
 
     render: function() {
       $(this.el).html(this.template());
     },
 
     addExtraLine: function(){
-      //$('<div class="extraPayment"><div class="input-append date" ><input class="span2" type="text" name="extraDate" placeholder="Дата"/><span class="add-on"><i class="icon-calendar"></i></span></div><input type="text" class="numbersOnly" id="money" name="money" placeholder="Сумма"></div>').appendTo($('.extra'));
-      extraPaymentView = new ExtraPaymentView();
-      $('.extraLine').append(extraPaymentView.render().el); 
-
-      $('[name="extraDate"]').datepicker({
-          endDate: now
-        }).on('changeDate', function(ev){
-          if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf() || ev.date.valueOf()  > end_at.datepicker('getDate').valueOf()){
-            $(this).datepicker("update", start_at.datepicker('getDate'));
-          }
-      });
+      var model = new ExtraPayment({id: (new Date()).valueOf()});
+      this.model.extraCollection.add([model]);
+      extraPaymentView = new ExtraPaymentView({model: model});
+      $('.extraLine').append(extraPaymentView.render().el);
     },
 
     removeExtraLine: function(){
-      $(this.el).find('.extraPayment').last().remove();
+     // model.extraCollection.remove();
     },
   });
 
@@ -144,53 +158,53 @@ $(function(){
   
     defaults: {
       debt: 0,
-      start: '0/0/0',
-      end: '0/0/0'
+      start: new Date,
+      end: new Date
     },
 
     initialize: function() {
       _.bindAll(this, 'recalculate');
       this.extraCollection = new ExtraCollection(),
       this.results = new Results(),
-      this.bind('change', this.recalculate),
-      this.extraCollection.bind('add', this.recalculate, this);
-      extraBlockView = new ExtraBlockView({el: '.extra'}).render();
+      this.bind('change', this.recalculate);//fix it
+      this.extraCollection.bind('change', this.recalculate, this);
     },
 
     recalculate: function() {
+      var model = this;
       var getPenalty = this.getPenalty,
           dateFormat = this.dateFormat,
           getRefRate = this.getRefRate,
           results = this.results;
 
-      results.reset();
+      this.results.reset(); //reset results collection
 
-      //need add info to result collection
-      var debt = this.get('debt'), 
-          start = this.get('start'),
-          end = this.get('end'),
+      var debt = parseInt(model.get('debt')), 
+          start = model.get('start'),
+          end = model.get('end'),
           ref_rate = 0;
 
-      if(this.extraCollection.length != 0) {
-        this.extraCollection.each(function(ep){
-          temp_end = ep.get('date');
+      if(this.extraCollection.length != 0)
+        this.extraCollection.each(function(ep) {
+          temp_end = ep.get('d');
           extraMoney = ep.get('money');
 
-          ref_rate = getRefRate(temp_end); //get ref rate on this date period
-
+          ref_rate = 25;
+          //ref_rate = getRefRate(temp_end); //get ref rate on this date period
           var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
               result = new Result({start_at: dateFormat(start), end_at: dateFormat(temp_end), ref_rate: ref_rate, penalty: penalty});
-          
+          console.log('penalty ' + penalty)
           results.add([result]); // add result to result collection
           debt -= parseFloat(extraMoney); //new_debt = debt - extraPay
           start = temp_end + 86400000; //new period without start day (in ms)
         });
-      }
 
       // penalty for last period
-      ref_rate = this.getRefRate(end.getTime());
+      //ref_rate = this.getRefRate(end.getTime());
+      ref_rate = 23.7;
       var lastPenalty = (this.getPenalty(debt, start, end, ref_rate)),
           lastInterval = new Result({ start_at: this.dateFormat(start), end_at: this.dateFormat(end), ref_rate: ref_rate, penalty: lastPenalty});
+          //lastInterval = new Result({ start_at: (start), end_at: (end), ref_rate: ref_rate, penalty: lastPenalty});
       this.results.add([lastInterval]);
     },
 
@@ -219,7 +233,7 @@ $(function(){
     }, 
 
     dateFormat: function (date){
-      var d = new Date(date);
+      var d = new Date(parseInt(date));
       return ( d.getMonth() + 1 +  "/" + d.getDate() + "/" + d.getFullYear());
     }
   });
@@ -227,79 +241,77 @@ $(function(){
   var AppView = Backbone.View.extend({  
 
     events: {
-      'click input#ok': 'addResult',
+      'change input#debt':  'changeDebt'
     },
 
     initialize: function(){
       this.extraCollection = this.model.extraCollection;
       this.template = _.template($('#app-template').html());
-      _.bindAll(this, 'render', 'addResult');
+      _.bindAll(this, 'render', 'changeDebt');
     },
 
     render: function(){
       var body = $(this.el);
+      model = this.model;
       body.html(this.template());
       //valid debt
       $('.numbersOnly').keyup(function () { 
           this.value = this.value.replace(/[^0-9\.]/g,'');
       });
+
+      var $error = $("#error"),
+      start_at = $(this.el).find($('#start_at')).datepicker({
+          endDate: new Date
+        }).on('changeDate', function(ev){
+          model.set({start: [ev.date.valueOf()]});
+          // if(ev.date.valueOf() > end_at.datepicker('getDate').valueOf()){
+          //   $error.text('Дата погашения должна быть больше даты возникновения задолженности');
+          //   $error.show();
+          //   start_at.datepicker("update", end_at.datepicker('getDate'));
+          // }
+        }),
+      end_at = $('#end_at').datepicker({
+          endDate: new Date
+        }).on('changeDate', function(ev){
+          model.set({end: [ev.date.valueOf()]});
+          // if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf()){
+          //   $error.text('Дата погашения должна быть больше даты возникновения задолженности');
+          //   $error.show();
+          //   end_at.datepicker("update", start_at.datepicker('getDate'));
+          // }
+      });
     }, 
     
-    addResult: function(){
-      var collection = this.model.results,
-          extraCollection = this.model.extraCollection,
-          $body = $(this.el);
-     
-      $('#error').hide();
-        extraCollection.reset(); //reset extra details collection
-
-        this.model.set({
-          debt: $body.find('#debt').val(),
-          start: $body.find('#start_at').datepicker('getDate'),
-          end: $body.find('#end_at').datepicker('getDate'),
-        });
-
-      if($('.extraPayment').size() != 0){
-        $('.extraPayment').each(function(index){
-          var $extraDiv = $(this),
-              end_interval = $extraDiv.find('[name="extraDate"]').datepicker('getDate').valueOf(), //getTime(); //end of period
-              money = $extraDiv.find('[name="money"]').val();
-          if(end_interval != 0 && money != 0 ){
-            var extraDetails = new ExtraPayment({date: end_interval, money: money});// create new payment instance
-            extraCollection.add([extraDetails]); //add item to collection of extra payment
-          }
-        });
-      }   
-    },  
+    changeDebt: function(ev) {
+      this.model.set({ 'debt': ev.target.value });
+    }
   });
-  
 
-  var appModel = new AppModel();
-  var resultBlockView = new ResultBlockView({ model: appModel, el: '#result'}),
-      appView = new AppView({model: appModel, el: '#details'});
+  var ApplicationLayout = Backbone.View.extend({
+    initialize: function() {
+      // создать вьюхи для this.model, this.model.extraPayments, this.model.results
+      // и зааппендить их в нужные дивки
+      _.bindAll(this, 'render');
+      this.appView = new AppView({model: this.model, el: '#details'});
+      this.extraBlockView = new ExtraBlockView({ model: this.model , el: '.extra'});
+      this.resultBlockView = new ResultBlockView({ model: this.model, el: '#result'});
+     },
+
+    render: function() {
+      this.appView.render();
+      this.extraBlockView.render();
+    }
+  });
+    
+ var model = new AppModel();
+ new ApplicationLayout({model: model}).render();
  
-  appView.render();
-  
-  var nowTemp = new Date(),
-      now = (new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0));
+      $('.numbersOnly').keyup(function () { 
+          this.value = this.value.replace(/[^0-9\.]/g,'');
+      });
 
-  var $error = $("#error"),
-        start_at = $('#start_at').datepicker({
-          endDate: now 
-        }).on('changeDate', function(ev){
-          if(ev.date.valueOf() > end_at.datepicker('getDate').valueOf()){
-            $error.text('Дата погашения должна быть больше даты возникновения задолженности');
-            $error.show();
-            start_at.datepicker("update", end_at.datepicker('getDate'));
-          }
-        }),
-        end_at = $('#end_at').datepicker({
-          endDate: now
-        }).on('changeDate', function(ev){
-          if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf()){
-            $error.text('Дата погашения должна быть больше даты возникновения задолженности');
-            $error.show();
-            end_at.datepicker("update", start_at.datepicker('getDate'));
-          }
-        });
+  //    var nowTemp = new Date(),
+  //    now = (new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0));
+
+
 });
