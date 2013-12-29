@@ -9,6 +9,10 @@ var app = app || {};
       end: new Date
     },
 
+    // validate: function(attrs, options) {
+    //   if(attrs)
+    // },
+
     initialize: function() {
       _.bindAll(this, 'recalculate');
       this.extraCollection = new app.ExtraCollection(),
@@ -32,29 +36,28 @@ var app = app || {};
           end = model.get('end'),
           ref_rate = 0;
 
-      if(this.extraCollection.length != 0)
-        console.log(this.extraCollection.pluck('d'));
-        this.extraCollection.each(function(ep) {
-          temp_end = ep.get('d');
-          extraMoney = ep.get('money');
+      if(debt && start && end){
+        if(this.extraCollection.length != 0)
+          this.extraCollection.each(function(ep) {
+            temp_end = ep.get('d');
+            extraMoney = ep.get('money');
+            if(temp_end && extraMoney){
+              ref_rate = getRefRate(temp_end); //get ref rate on this date period
+              var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
+                  result = new app.Result({start_at: dateFormat(start), end_at: dateFormat(temp_end), ref_rate: ref_rate, penalty: penalty});
 
-          ref_rate = getRefRate(temp_end); //get ref rate on this date period
-          var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
-              result = new app.Result({start_at: dateFormat(start), end_at: dateFormat(temp_end), ref_rate: ref_rate, penalty: penalty});
-
-          results.add([result]); // add result to result collection
-          debt -= parseFloat(extraMoney); //new_debt = debt - extraPay
-          start = parseInt(temp_end) + 86400000; //new period without start day (in ms)
-        });
-
-      // penalty for last period
-      end_in_ms = end;
-      ref_rate = this.getRefRate(end_in_ms);
-      console.log('START of the last period: ' + start);
-      var lastPenalty = (this.getPenalty(debt, start, end, ref_rate)),
-          lastInterval = new app.Result({ start_at: this.dateFormat(start), end_at: this.dateFormat(end), ref_rate: ref_rate, penalty: lastPenalty});
-          //lastInterval = new Result({ start_at: (start), end_at: (end), ref_rate: ref_rate, penalty: lastPenalty});
-      this.results.add([lastInterval]);
+              results.add([result]); // add result to result collection
+              debt -= parseFloat(extraMoney); //new_debt = debt - extraPay
+              start = parseInt(temp_end) + 86400000; //new period without start day (in ms)
+            }
+          });
+        // penalty for last period or no extra payments
+        end_in_ms = end;
+        ref_rate = this.getRefRate(end_in_ms);
+        var lastPenalty = (this.getPenalty(debt, start, end, ref_rate)),
+            lastInterval = new app.Result({ start_at: this.dateFormat(start), end_at: this.dateFormat(end), ref_rate: ref_rate, penalty: lastPenalty});
+        this.results.add([lastInterval]);
+      }
     },
 
     validate: function(attr) {

@@ -3,7 +3,7 @@ var app = app || {};
 (function() {
   app.ExtraPayment = Backbone.Model.extend({
     defaults: {
-      d: new Date, 
+      d: 0, 
       money: 0
     }
   });
