@@ -4,8 +4,8 @@ var app = app || {};
   app.ExtraCollection = Backbone.Collection.extend({
     model: app.ExtraPayment, 
 
-    comparator: function(details) {
-      return parseInt(details.get('d'));
+    comparator: function(detail) {
+      return detail.get('d');
     }
   });
 })();

@@ -9,10 +9,6 @@ var app = app || {};
       end: new Date
     },
 
-    // validate: function(attrs, options) {
-    //   if(attrs)
-    // },
-
     initialize: function() {
       _.bindAll(this, 'recalculate');
       this.extraCollection = new app.ExtraCollection(),
@@ -27,6 +23,7 @@ var app = app || {};
       var getPenalty = this.getPenalty,
           dateFormat = this.dateFormat,
           getRefRate = this.getRefRate,
+          extraCollection = this.extraCollection,
           results = this.results;
 
       this.results.reset(); //reset results collection
@@ -37,11 +34,12 @@ var app = app || {};
           ref_rate = 0;
 
       if(debt && start && end){
-        if(this.extraCollection.length != 0)
-          this.extraCollection.each(function(ep) {
+        if(extraCollection.length != 0)
+          extraCollection.each(function(ep) {
             temp_end = ep.get('d');
             extraMoney = ep.get('money');
             if(temp_end && extraMoney){
+              extraCollection.sort();
               ref_rate = getRefRate(temp_end); //get ref rate on this date period
               var penalty = (getPenalty(debt, start, temp_end, ref_rate)),
                   result = new app.Result({start_at: dateFormat(start), end_at: dateFormat(temp_end), ref_rate: ref_rate, penalty: penalty});
