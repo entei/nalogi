@@ -14,16 +14,15 @@ var app = app || {};
     },
 
     render: function() {
-      model = this.model; 
+      model = this.model;
+      appmodel = this.options.appmodel;
       var renderedContent = this.template();
       $(this.el).html(renderedContent);
       $(this.el).find('[name="extraDate"]').datepicker({
-          endDate: new Date()
+          startDate: new Date(parseInt(appmodel.get('start'))),
+          endDate: new Date(parseInt(appmodel.get('end')))
         }).on('changeDate', function(ev){
-           model.set({d: [ev.date.valueOf()]});
-          // if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf() || ev.date.valueOf()  > end_at.datepicker('getDate').valueOf()){
-          //   $(this).datepicker("update", start_at.datepicker('getDate'));
-          // }
+            model.set({d: [ev.date.valueOf()]});
       });
       return this;
     },

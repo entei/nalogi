@@ -10,7 +10,7 @@ var app = app || {};
     },
 
     initialize: function() {
-      _.bindAll(this, 'render', 'removeExtraLine');
+      _.bindAll(this, 'render', 'addExtraLine', 'removeExtraLine');
       this.template = _.template($('#extraBlock-template').html()); 
     },
 
@@ -21,7 +21,7 @@ var app = app || {};
     addExtraLine: function(){
       var model = new app.ExtraPayment({id: (new Date()).valueOf()});
       this.model.extraCollection.add([model]);
-      extraPaymentView = new app.ExtraPaymentView({model: model});
+      extraPaymentView = new app.ExtraPaymentView({model: model, appmodel: this.model });
       $('.extraLine').append(extraPaymentView.render().el);
     },
 

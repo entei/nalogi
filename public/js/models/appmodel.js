@@ -5,8 +5,8 @@ var app = app || {};
 
     defaults: {
       debt: 0,
-      start: new Date,
-      end: new Date
+      start: 0,
+      end: 0
     },
 
     initialize: function() {
