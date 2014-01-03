@@ -14,9 +14,10 @@ var app = app || {};
     },
 
     render: function(){
-      var me = this;
-      var body = $(this.el);
-      model = this.model;
+      var me = this,
+          body = $(this.el),
+          extraCollection = this.extraCollection,
+          model = this.model;
       body.html(this.template());
       //valid debt
       $('.numbersOnly').keyup(function () { 
@@ -32,7 +33,7 @@ var app = app || {};
             errors.push({name: 'start', message: 'Дата погашения должна быть больше даты возникновения задолженности.'});
             me.showErrors(errors);
            // start_at.datepicker("update", end_at.datepicker('getDate'));
-          } else model.set({start: [ev.date.valueOf()]});
+          } else app.model.set({start: [ev.date.valueOf()]});
         }),
       end_at = $('#end_at').datepicker({
           endDate: new Date
@@ -42,7 +43,7 @@ var app = app || {};
             errors.push({name: 'start', message: 'Дата погашения должна быть больше даты возникновения задолженности.'});
             me.showErrors(errors);
            // end_at.datepicker("update", start_at.datepicker('getDate'));
-          } else model.set({end: [ev.date.valueOf()]});
+          } else app.model.set({end: [ev.date.valueOf()]});
       });
     }, 
     

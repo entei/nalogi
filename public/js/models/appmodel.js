@@ -34,7 +34,7 @@ var app = app || {};
           ref_rate = 0;
 
       if(debt && start && end){
-        if(extraCollection.length != 0)
+        if(extraCollection.length != 0){
           extraCollection.each(function(ep) {
             temp_end = ep.get('d');
             extraMoney = ep.get('money');
@@ -49,18 +49,13 @@ var app = app || {};
               start = parseInt(temp_end) + 86400000; //new period without start day (in ms)
             }
           });
+        }
         // penalty for last period or no extra payments
         end_in_ms = end;
         ref_rate = this.getRefRate(end_in_ms);
         var lastPenalty = (this.getPenalty(debt, start, end, ref_rate)),
             lastInterval = new app.Result({ start_at: this.dateFormat(start), end_at: this.dateFormat(end), ref_rate: ref_rate, penalty: lastPenalty});
         this.results.add([lastInterval]);
-      }
-    },
-
-    validate: function(attr) {
-      if(attr.start > attr.end ){
-        return 'wrong date!';
       }
     },
 

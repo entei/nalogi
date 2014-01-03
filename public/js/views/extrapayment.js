@@ -17,7 +17,10 @@ var app = app || {};
       model = this.model;
       appmodel = this.options.appmodel;
       var renderedContent = this.template();
-      $(this.el).html(renderedContent);
+      $(this.el).html(renderedContent).find('.numbersOnly').keyup(function () { 
+          this.value = this.value.replace(/[^0-9\.]/g,'');
+      });
+
       $(this.el).find('[name="extraDate"]').datepicker({
           startDate: new Date(parseInt(appmodel.get('start'))),
           endDate: new Date(parseInt(appmodel.get('end')) - 86400000)
