@@ -73,8 +73,8 @@ var app = app || {};
       if (model){
         rr = model.get('Value');
       }
-     // return rr;
-     return 23.5;
+      return rr;
+      //return 23.5;
     },
 
     getPenalty: function (debt, start_at, end_at, ref_rate) {

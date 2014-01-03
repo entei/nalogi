@@ -10,7 +10,7 @@ var app = app || {};
     initialize: function(){
       this.extraCollection = this.model.extraCollection;
       this.template = _.template($('#app-template').html());
-      _.bindAll(this, 'render', 'changeDebt');
+      _.bindAll(this, 'render', 'changeDebt', 'showErrors');
     },
 
     render: function(){
@@ -23,7 +23,6 @@ var app = app || {};
           this.value = this.value.replace(/[^0-9\.]/g,'');
       });
 
-      var $error = $("#error"),
       errors = [],
       start_at = $(this.el).find($('#start_at')).datepicker({
           endDate: new Date
@@ -33,7 +32,7 @@ var app = app || {};
             errors.push({name: 'start', message: 'Дата погашения должна быть больше даты возникновения задолженности.'});
             me.showErrors(errors);
            // start_at.datepicker("update", end_at.datepicker('getDate'));
-          } else model.set({start: [ev.date.valueOf()]}); // wrong ev
+          } else model.set({start: [ev.date.valueOf()]});
         }),
       end_at = $('#end_at').datepicker({
           endDate: new Date
@@ -52,17 +51,16 @@ var app = app || {};
     },
 
     showErrors: function(errors) {
-      console.log('errors');
       _.each(errors, function (error) {
           var controlGroup = this.$('.' + error.name);
           controlGroup.addClass('error');
-          //controlGroup.find('.help-inline').text(error.message);
+          $('#error').text(error.message).show();
       }, this);
     },
 
     hideErrors: function () {
       this.$('.control-group').removeClass('error');
-     // this.$('.help-inline').text('');
+      $('#error').text('').hide();
     }
   }); 
 })();

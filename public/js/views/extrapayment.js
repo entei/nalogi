@@ -20,9 +20,9 @@ var app = app || {};
       $(this.el).html(renderedContent);
       $(this.el).find('[name="extraDate"]').datepicker({
           startDate: new Date(parseInt(appmodel.get('start'))),
-          endDate: new Date(parseInt(appmodel.get('end')))
+          endDate: new Date(parseInt(appmodel.get('end')) - 86400000)
         }).on('changeDate', function(ev){
-            model.set({d: [ev.date.valueOf()]});
+          model.set({d: [ev.date.valueOf()]});
       });
       return this;
     },
