@@ -14,6 +14,7 @@ var app = app || {};
     },
 
     render: function(){
+      var me = this;
       var body = $(this.el);
       model = this.model;
       body.html(this.template());
@@ -21,32 +22,47 @@ var app = app || {};
       $('.numbersOnly').keyup(function () { 
           this.value = this.value.replace(/[^0-9\.]/g,'');
       });
-      var error = [];
+
       var $error = $("#error"),
+      errors = [],
       start_at = $(this.el).find($('#start_at')).datepicker({
           endDate: new Date
         }).on('changeDate', function(ev){
+          me.hideErrors();
           if(ev.date.valueOf() > end_at.datepicker('getDate').valueOf()){
-            errors.push({name: 'email', message: 'Please fill email field.'});
-            $error.text('Дата погашения должна быть больше даты возникновения задолженности');
-            $error.show();
-            start_at.datepicker("update", end_at.datepicker('getDate'));
-          } else model.set({start: [ev.date.valueOf()]});
+            errors.push({name: 'start', message: 'Дата погашения должна быть больше даты возникновения задолженности.'});
+            me.showErrors(errors);
+           // start_at.datepicker("update", end_at.datepicker('getDate'));
+          } else model.set({start: [ev.date.valueOf()]}); // wrong ev
         }),
       end_at = $('#end_at').datepicker({
           endDate: new Date
         }).on('changeDate', function(ev){
+          me.hideErrors();
           if(ev.date.valueOf() < start_at.datepicker('getDate').valueOf()){
-            errors.push({name: 'feedback', message: 'Please fill feedback field.'});
-            $error.text('Дата погашения должна быть больше даты возникновения задолженности');
-            $error.show();
-            end_at.datepicker("update", start_at.datepicker('getDate'));
+            errors.push({name: 'start', message: 'Дата погашения должна быть больше даты возникновения задолженности.'});
+            me.showErrors(errors);
+           // end_at.datepicker("update", start_at.datepicker('getDate'));
           } else model.set({end: [ev.date.valueOf()]});
       });
     }, 
     
     changeDebt: function(ev) {
       this.model.set({ 'debt': ev.target.value });
+    },
+
+    showErrors: function(errors) {
+      console.log('errors');
+      _.each(errors, function (error) {
+          var controlGroup = this.$('.' + error.name);
+          controlGroup.addClass('error');
+          //controlGroup.find('.help-inline').text(error.message);
+      }, this);
+    },
+
+    hideErrors: function () {
+      this.$('.control-group').removeClass('error');
+     // this.$('.help-inline').text('');
     }
   }); 
 })();

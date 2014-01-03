@@ -59,7 +59,7 @@ var app = app || {};
     },
 
     validate: function(attr) {
-      if(attr.start_at > attr.end_at){
+      if(attr.start > attr.end ){
         return 'wrong date!';
       }
     },
@@ -73,8 +73,8 @@ var app = app || {};
       if (model){
         rr = model.get('Value');
       }
-
-      return rr;
+     // return rr;
+     return 23.5;
     },
 
     getPenalty: function (debt, start_at, end_at, ref_rate) {
